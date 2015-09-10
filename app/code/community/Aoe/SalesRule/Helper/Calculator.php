@@ -268,6 +268,8 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
      *
      * @param Mage_Sales_Model_Quote_Address $address
      * @param Mage_SalesRule_Model_Rule      $rule
+     *
+     * @return $this
      */
     protected function addRuleDescription(Mage_Sales_Model_Quote_Address $address, Mage_SalesRule_Model_Rule $rule)
     {
@@ -283,5 +285,7 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
         }
 
         $address->setDiscountDescriptionArray($descriptions);
+
+        return $this;
     }
 }
