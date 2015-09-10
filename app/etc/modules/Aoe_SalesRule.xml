@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<config>
+    <modules>
+        <Aoe_SalesRule>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Mage_Core/>
+                <Mage_Catalog/>
+                <Mage_Sales/>
+                <Mage_SalesRule/>
+            </depends>
+        </Aoe_SalesRule>
+    </modules>
+</config>
