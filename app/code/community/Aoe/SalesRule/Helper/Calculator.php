@@ -5,6 +5,34 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
     /** @var Mage_SalesRule_Model_Rule[][] */
     protected $rules = [];
 
+    protected $legacyModeActive = null;
+
+    public function getIsLegacyModeActive()
+    {
+        if ($this->legacyModeActive === null) {
+            $this->legacyModeActive = false;
+            $eventName = 'salesrule_validator_process';
+            $property = new ReflectionProperty(Mage::app(), '_events');
+            $property->setAccessible(true);
+            $events = $property->getValue(Mage::app());
+            foreach ($events as $area => $areaEvents) {
+                if (!array_key_exists($eventName, $areaEvents)) {
+                    $eventConfig = Mage::app()->getConfig()->getEventConfig($area, $eventName);
+                    if (!$eventConfig) {
+                        continue;
+                    }
+                } elseif ($areaEvents[$eventName] === false) {
+                    continue;
+                }
+
+                $this->legacyModeActive = true;
+                break;
+            }
+        }
+
+        return $this->legacyModeActive;
+    }
+
     /**
      * Return the correct rule set
      *
@@ -62,8 +90,10 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
         $applied = $this->fireRuleEvent($address, $rule, $allItems, $validItems);
 
         // Fire legacy events
-        foreach ($validItems as $item) {
-            $applied = $this->fireLegacyEvent($rule, $item, $address) || $applied;
+        if ($this->getIsLegacyModeActive()) {
+            foreach ($validItems as $item) {
+                $applied = $this->fireLegacyEvent($rule, $item, $address) || $applied;
+            }
         }
 
         foreach ($allItems as $item) {
