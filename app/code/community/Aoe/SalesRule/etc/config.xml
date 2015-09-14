@@ -19,6 +19,8 @@
                 <rewrite>
                     <quote_freeshipping>Aoe_SalesRule_Model_Quote_Freeshipping</quote_freeshipping>
                     <quote_discount>Aoe_SalesRule_Model_Quote_Discount</quote_discount>
+                    <rule_condition_product_found>Aoe_SalesRule_Model_Condition_Product_Found</rule_condition_product_found>
+                    <rule_condition_product_subselect>Aoe_SalesRule_Model_Condition_Product_Subselect</rule_condition_product_subselect>
                 </rewrite>
             </salesrule>
         </models>
