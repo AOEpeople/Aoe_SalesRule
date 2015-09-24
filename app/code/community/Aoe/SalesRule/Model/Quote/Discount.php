@@ -41,7 +41,7 @@ class Aoe_SalesRule_Model_Quote_Discount extends Mage_SalesRule_Model_Quote_Disc
 
         // Iterate over the rules
         foreach ($calculator->getRules($quote) as $rule) {
-            if($calculator->applyRule($rule, $address) && $rule->getStopRulesProcessing()) {
+            if ($calculator->applyRule($rule, $address) && $rule->getStopRulesProcessing()) {
                 break;
             }
         }

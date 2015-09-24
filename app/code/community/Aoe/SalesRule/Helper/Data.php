@@ -218,11 +218,11 @@ class Aoe_SalesRule_Helper_Data extends Mage_Core_Helper_Abstract
     protected function mergeIds($a1, $a2, $asString = true)
     {
         if (!is_array($a1)) {
-            $a1 = empty($a1) ? array() : explode(',', $a1);
+            $a1 = empty($a1) ? [] : explode(',', $a1);
         }
 
         if (!is_array($a2)) {
-            $a2 = empty($a2) ? array() : explode(',', $a2);
+            $a2 = empty($a2) ? [] : explode(',', $a2);
         }
 
         $a = array_unique(array_map('intval', array_merge($a1, $a2)));

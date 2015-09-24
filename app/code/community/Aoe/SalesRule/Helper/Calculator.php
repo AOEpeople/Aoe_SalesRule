@@ -180,14 +180,14 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
         // Fire legacy event
         Mage::dispatchEvent(
             'salesrule_validator_process',
-            array(
+            [
                 'quote'   => $quote,
                 'address' => $address,
                 'rule'    => $rule,
                 'item'    => $item,
                 'qty'     => $qty,
                 'result'  => $result,
-            )
+            ]
         );
 
         // Save discount amounts
