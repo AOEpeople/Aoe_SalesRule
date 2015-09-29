@@ -111,7 +111,7 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
 
             // Update the item discount
             $item->setDiscountAmount($item->getDiscountAmount() + $itemDiscountAmount);
-            $item->setBaseDiscountAmount($item->getBaseDiscountAmount() + $baseDiscountAmount);
+            $item->setBaseDiscountAmount($item->getBaseDiscountAmount() + $itemBaseDiscountAmount);
 
             // This is a bit wonky, but needed for taxes
             $item->setOriginalDiscountAmount($item->getOriginalDiscountAmount() + $itemDiscountAmount);
