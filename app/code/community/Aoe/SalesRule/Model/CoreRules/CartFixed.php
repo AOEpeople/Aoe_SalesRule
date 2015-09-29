@@ -43,24 +43,43 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
         $ruleTotalBaseItemsPrice = 0;
         $itemPrices = [];
         foreach ($validItems as $item) {
-            // Get max quantity
+            // Get max quantity (min or rule max qty or item qty)
             $qty = $helper->getItemRuleQty($item, $rule);
 
             // Skip zero quantity
             if ($qty <= 0.0) {
                 continue;
             }
-            // Get row prices
-            $itemRowPrice = ($helper->getItemPrice($item) * $qty);
-            $itemBaseRowPrice = ($helper->getItemBasePrice($item) * $qty);
 
-            // Add to running totals
-            $ruleTotalItemsPrice += $itemRowPrice;
-            $ruleTotalBaseItemsPrice += $itemBaseRowPrice;
+            // Get unit price
+            $itemPrice = $helper->getItemPrice($item);
+            $itemBasePrice = $helper->getItemBasePrice($item);
 
-            // Save row prices for later
-            $itemPrices[$item->getId()] = [$itemRowPrice, $itemBaseRowPrice];
+            // Get row price
+            $itemRowPrice = ($itemPrice * $item->getTotalQty());
+            $itemBaseRowPrice = ($itemBasePrice * $item->getTotalQty());
+
+            // Get discountable price
+            $itemDiscountablePrice = ($itemPrice * $qty);
+            $itemBaseDiscountablePrice = ($itemBasePrice * $qty);
+
+            // Save price data for later
+            $itemPrices[$item->getId()] = [
+                $itemPrice,
+                $itemBasePrice,
+                $itemRowPrice,
+                $itemBaseRowPrice,
+                $itemDiscountablePrice,
+                $itemBaseDiscountablePrice,
+            ];
+
+            // Add row prices to running totals
+            $ruleTotalItemsPrice += $itemDiscountablePrice;
+            $ruleTotalBaseItemsPrice += $itemBaseDiscountablePrice;
         }
+
+        $startDiscountAmount = $discountAmount;
+        $startBaseDiscountAmount = $baseDiscountAmount;
 
         foreach ($validItems as $item) {
             // Skip the skipped items
@@ -68,21 +87,29 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
                 continue;
             }
 
-            // Extract the pre-calculate row price information
-            list($itemRowPrice, $itemBaseRowPrice) = $itemPrices[$item->getId()];
-
             // Flag indicating the rule was applied
             $applied = true;
 
-            // Calculate the discount amounts
-            $itemDiscountAmount = ($itemRowPrice * ($itemRowPrice / $ruleTotalItemsPrice));
-            $itemBaseDiscountAmount = ($itemBaseRowPrice * ($itemBaseRowPrice / $ruleTotalItemsPrice));
+            // Extract the pre-calculate price data
+            list($itemPrice, $itemBasePrice, $itemRowPrice, $itemBaseRowPrice, $itemDiscountablePrice, $itemBaseDiscountablePrice) = $itemPrices[$item->getId()];
 
-            // Round the discount amount and make sure we didn't round UP and over the remaining discount amount
-            $itemDiscountAmount = min($discountAmount, $helper->round($itemDiscountAmount, $quote->getQuoteCurrencyCode()));
-            $itemBaseDiscountAmount = min($baseDiscountAmount, $helper->round($itemBaseDiscountAmount, $quote->getBaseCurrencyCode()));
+            // Calculate remaining row amount
+            $itemRemainingRowPrice = max($itemRowPrice - $item->getDiscountAmount(), 0);
+            $itemRemainingBaseRowPrice = max($itemBaseRowPrice - $item->getBaseDiscountAmount(), 0);
 
-            // Update the item discounts
+            // Calculate price factor
+            $priceFactor = ($itemDiscountablePrice / $ruleTotalItemsPrice);
+            $basePriceFactor = ($itemBaseDiscountablePrice / $ruleTotalBaseItemsPrice);
+
+            // Calculate (and round) the item discount amount
+            $itemDiscountAmount = $helper->round($startDiscountAmount * $priceFactor, $quote->getQuoteCurrencyCode());
+            $itemBaseDiscountAmount = $helper->round($startBaseDiscountAmount * $basePriceFactor, $quote->getBaseCurrencyCode());
+
+            // Ensure discount does not exceed the remaining discount, max item discount, or remaining row price
+            $itemDiscountAmount = max(min($itemDiscountAmount, $discountAmount, $itemDiscountablePrice, $itemRemainingRowPrice), 0.0);
+            $itemBaseDiscountAmount = max(min($itemBaseDiscountAmount, $baseDiscountAmount, $itemBaseDiscountablePrice, $itemRemainingBaseRowPrice), 0.0);
+
+            // Update the item discount
             $item->setDiscountAmount($item->getDiscountAmount() + $itemDiscountAmount);
             $item->setBaseDiscountAmount($item->getBaseDiscountAmount() + $baseDiscountAmount);
 
@@ -90,7 +117,7 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
             $item->setOriginalDiscountAmount($item->getOriginalDiscountAmount() + $itemDiscountAmount);
             $item->setBaseOriginalDiscountAmount($item->getBaseOriginalDiscountAmount() + $itemBaseDiscountAmount);
 
-            // Subtract from the total discount amounts
+            // Subtract from the total remaining discount amount
             $discountAmount -= $itemDiscountAmount;
             $baseDiscountAmount -= $itemBaseDiscountAmount;
         }
@@ -106,13 +133,13 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
             $shippingAmount -= $address->getShippingDiscountAmount();
             $baseShippingAmount -= $address->getBaseShippingDiscountAmount();
 
-            $shippingDiscountAmount = min(max($discountAmount, 0.0), $shippingAmount);
-            $shippingBaseDiscountAmount = min(max($baseDiscountAmount, 0.0), $baseShippingAmount);
+            $shippingDiscountAmount = max(min($discountAmount, $shippingAmount), 0.0);
+            $shippingBaseDiscountAmount = max(min($baseDiscountAmount, $baseShippingAmount), 0.0);
 
             $address->setShippingDiscountAmount($address->getShippingDiscountAmount() + $shippingDiscountAmount);
             $address->setBaseShippingDiscountAmount($address->getBaseShippingDiscountAmount() + $shippingBaseDiscountAmount);
 
-            // Subtract from the total discount amounts
+            // Subtract from the total discount amount
             $discountAmount -= $shippingDiscountAmount;
             $baseDiscountAmount -= $shippingBaseDiscountAmount;
 
