@@ -7,7 +7,7 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
 
     protected $legacyModeActive = null;
 
-    public function getIsLegacyModeActive()
+    public function getLegacyModeActive()
     {
         if ($this->legacyModeActive === null) {
             $this->legacyModeActive = false;
@@ -31,6 +31,12 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
         }
 
         return $this->legacyModeActive;
+    }
+
+    public function getLegacyModeSkipIfApplied($store = null)
+    {
+        $skip = Mage::getStoreConfigFlag('aoe_salesrule/legacy_mode/skip_if_applied', $store);
+        return $skip;
     }
 
     /**
@@ -90,7 +96,8 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
         $applied = $this->fireRuleEvent($address, $rule, $allItems, $validItems);
 
         // Fire legacy events
-        if ($this->getIsLegacyModeActive()) {
+        $fireLegacyEvents = $this->getLegacyModeActive() && !($applied && $this->getLegacyModeSkipIfApplied($address->getQuote()->getStore()));
+        if ($fireLegacyEvents) {
             foreach ($validItems as $item) {
                 $applied = $this->fireLegacyEvent($rule, $item, $address) || $applied;
             }

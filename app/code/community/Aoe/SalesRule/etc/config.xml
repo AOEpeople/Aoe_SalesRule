@@ -65,4 +65,11 @@
             </sales_quote_address_discount_apply_rule_buy_x_get_y>
         </events>
     </global>
+    <default>
+        <aoe_salesrule>
+            <legacy_mode>
+                <skip_if_applied>0</skip_if_applied>
+            </legacy_mode>
+        </aoe_salesrule>
+    </default>
 </config>
