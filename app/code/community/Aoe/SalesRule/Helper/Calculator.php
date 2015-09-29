@@ -107,10 +107,6 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
             // Round and limit discount amounts
             $this->fixDiscounts($item, $address->getQuote()->getQuoteCurrencyCode(), $address->getQuote()->getBaseCurrencyCode());
 
-            // Add the item discounts
-            $address->addTotalAmount('discount', -$item->getDiscountAmount());
-            $address->addBaseTotalAmount('discount', -$item->getBaseDiscountAmount());
-
             // Check free shipping
             if ($rule->getSimpleFreeShipping() === Mage_SalesRule_Model_Rule::FREE_SHIPPING_ITEM) {
                 $item->setFreeShipping($rule->getDiscountQty() ? $rule->getDiscountQty() : true);
