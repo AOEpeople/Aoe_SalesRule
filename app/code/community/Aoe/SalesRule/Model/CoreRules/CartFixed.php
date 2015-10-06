@@ -146,7 +146,42 @@ class Aoe_SalesRule_Model_CoreRules_CartFixed extends Aoe_SalesRule_Model_CoreRu
             $applied = true;
         }
 
-        // TODO: do something with possible remaining discount amount
+        // Do something with possible remaining discount amount
+        if ($applied && $discountAmount > 0.0) {
+            foreach ($validItems as $item) {
+                // Skip the skipped items
+                if (!isset($itemPrices[$item->getId()])) {
+                    continue;
+                }
+
+                // Extract the pre-calculate price data
+                list($itemPrice, $itemBasePrice, $itemRowPrice, $itemBaseRowPrice, $itemDiscountablePrice, $itemBaseDiscountablePrice) = $itemPrices[$item->getId()];
+
+                // Calculate remaining row amount
+                $itemRemainingRowPrice = max($itemRowPrice - $item->getDiscountAmount(), 0);
+                $itemRemainingBaseRowPrice = max($itemBaseRowPrice - $item->getBaseDiscountAmount(), 0);
+
+                // Apply the discount
+                if ($itemRemainingRowPrice >= $discountAmount && $itemRemainingBaseRowPrice >= $baseDiscountAmount) {
+                    // Update the item discount
+                    $item->setDiscountAmount($item->getDiscountAmount() + $discountAmount);
+                    $item->setBaseDiscountAmount($item->getBaseDiscountAmount() + $baseDiscountAmount);
+
+                    // This is a bit wonky, but needed for taxes
+                    $item->setOriginalDiscountAmount($item->getOriginalDiscountAmount() + $discountAmount);
+                    $item->setBaseOriginalDiscountAmount($item->getBaseOriginalDiscountAmount() + $baseDiscountAmount);
+
+                    // Zero out remaining discount
+                    $discountAmount = 0.0;
+                    $baseDiscountAmount = 0.0;
+                }
+
+                // If we've used the discount, exit the loop early
+                if ($discountAmount <= 0.0) {
+                    break;
+                }
+            }
+        }
 
         return $applied;
     }
