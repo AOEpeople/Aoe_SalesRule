@@ -48,13 +48,13 @@ class Aoe_SalesRule_Model_Quote_Discount extends Mage_SalesRule_Model_Quote_Disc
 
         // Add the item discounts
         foreach ($allItems as $item) {
-            $address->addTotalAmount('discount', -$item->getDiscountAmount());
-            $address->addBaseTotalAmount('discount', -$item->getBaseDiscountAmount());
+            $address->addTotalAmount($this->getCode(), -$item->getDiscountAmount());
+            $address->addBaseTotalAmount($this->getCode(), -$item->getBaseDiscountAmount());
         }
 
         // Add in any shipping discount
-        $this->_addAmount(-$address->getShippingDiscountAmount());
-        $this->_addBaseAmount(-$address->getBaseShippingDiscountAmount());
+        $address->addTotalAmount($this->getCode(), -$address->getShippingDiscountAmount());
+        $address->addBaseTotalAmount($this->getCode(), -$address->getBaseShippingDiscountAmount());
 
         // Manually update some subtotals (not even sure WHY Magento stores this value since the getters dynamically calculate the value anyway)
         $address->setSubtotalWithDiscount($address->getSubtotal() + $address->getDiscountAmount());
