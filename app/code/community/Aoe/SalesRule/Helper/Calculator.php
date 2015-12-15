@@ -110,7 +110,7 @@ class Aoe_SalesRule_Helper_Calculator extends Aoe_SalesRule_Helper_Data
             // Check free shipping
             if ($rule->getSimpleFreeShipping() == Mage_SalesRule_Model_Rule::FREE_SHIPPING_ITEM) {
                 $applied = true;
-                $item->setFreeShipping($rule->getDiscountQty() ? $rule->getDiscountQty() : true);
+                $item->setFreeShipping($rule->getDiscountQty() ? min($rule->getDiscountQty(), $item->getQty()) : $item->getQty());
             }
         }
 
